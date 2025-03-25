@@ -1,0 +1,163 @@
+edge_locations:
+  north_america:
+    us:
+      - Ashburn
+      - Atlanta
+      - Boston
+      - Chicago
+      - Columbus
+      - Dallas
+      - "Fort Worth"
+      - Denver
+      - Detroit
+      - Hillsboro
+      - Houston
+      - Jacksonville
+      - "Kansas City"
+      - "Los Angeles"
+      - Miami
+      - Minneapolis
+      - Nashville
+      - "New York"
+      - Newark
+      - "Palo Alto"
+      - Phoenix
+      - Philadelphia
+      - Pittsburgh
+      - Portland
+      - "San Francisco"
+      - "San Jose"
+      - "Salt Lake City"
+      - "Seattle"
+      - Tampa
+      - Washington
+    ca:
+      - Montreal
+      - Toronto
+      - Vancouver
+    mx:
+      - "Querétaro City"
+  south_america:
+    br:
+      - "Rio de Janeiro"
+      - "São Paulo"
+      - Fortaleza
+    co:
+      - Bogota
+    ar:
+      - "Buenos Aires"
+    cl:
+      - Santiago
+    pe:
+      - Lima
+  europe:
+    nl:
+      - Amsterdam
+    gr:
+      - Athens
+    de:
+      - Berlin
+      - "Frankfurt am Main"
+      - Munich
+    be:
+      - Brussels
+    ro:
+      - Bucharest
+    dk:
+      - Copenhagen
+    ie:
+      - Dublin
+    fi:
+      - Helsinki
+    pt:
+      - Lisbon
+    gb:
+      - London
+      - Manchester
+    es:
+      - Madrid
+    fr:
+      - Marseille
+      - Paris
+    it:
+      - Milan
+      - Palermo
+    "no":
+      - Oslo
+    cz:
+      - Prague
+    bg:
+      - Sofia
+    se:
+      - Stockholm
+    at:
+      - Vienna
+    pl:
+      - Warsaw
+    hr:
+      - Zagreb
+    ch:
+      - Zurich
+  asia_pacific:
+    in:
+      - Bengaluru
+      - Chennai
+      - Hyderabad
+      - Kolkata
+      - Mumbai
+      - "New Delhi"
+      - Pune
+    th:
+      - Bangkok
+    cn:
+      - Beijing
+      - Shanghai
+      - Ningxia
+      - Shenzhen
+      - Zhongwei
+    hk:
+      - "Hong Kong"
+    vn:
+      - Hanoi
+      - "Ho Chi Minh City"
+    id:
+      - Jakarta
+    my:
+      - "Kuala Lumpur"
+    ph:
+      - Manila
+    jp:
+      - Osaka
+      - Tokyo
+    kr:
+      - Seoul
+    sg:
+      - Singapore
+    tw:
+      - Taipei
+      - "Taoyuan City"
+    au:
+      - Brisbane
+      - Melbourne
+      - Perth
+      - Sydney
+    nz:
+      - Auckland
+  middle_east:
+    ae:
+      - Dubai
+      - "Al Fujairah City"
+    bh:
+      - Manama
+    om:
+      - Muscat
+    il:
+      - "Tel Aviv"
+  africa:
+    za:
+      - "Cape Town"
+      - Johannesburg
+    ng:
+      - Lagos
+    ke:
+      - Nairobi

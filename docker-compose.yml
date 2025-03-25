@@ -1,0 +1,22 @@
+version: '3.8'
+
+networks:
+  app:
+    driver: bridge
+
+volumes:
+  redis_data:
+
+services:
+  redis:
+    image: 'bitnami/redis:latest'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - app
+    volumes:
+      - redis_data:/bitnami/redis/data
+    expose:
+      - 6379
+    ports:
+      - 127.0.0.1:6379:6379
