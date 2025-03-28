@@ -8,6 +8,37 @@ volumes:
   redis_data:
 
 services:
+  app:
+    build: .
+    networks:
+      - app
+    ports:
+      - 5000:5000
+    expose:
+      - 5000
+    depends_on:
+      - redis
+  worker-1:
+    build: .
+    networks:
+      - app
+    depends_on:
+      - redis
+    command: "celery -A run.celery_app worker --loglevel INFO"
+  worker-2:
+    build: .
+    networks:
+      - app
+    depends_on:
+      - redis
+    command: "celery -A run.celery_app worker --loglevel INFO"
+  worker-3:
+    build: .
+    networks:
+      - app
+    depends_on:
+      - redis
+    command: "celery -A run.celery_app worker --loglevel INFO"
   redis:
     image: 'bitnami/redis:latest'
     environment:

@@ -22,7 +22,7 @@ class Cache(Resource):
         if not dict(request.json):
             return jsonify(message="Data is invalid"), 400
         
-        chunk_size = 10
+        chunk_size = 5
         try:
             with open("config/edge_locations.yaml") as f:
                 edge_locations = yaml.safe_load(f)['edge_locations']

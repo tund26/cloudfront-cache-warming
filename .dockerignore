@@ -12,7 +12,6 @@ README.md
 .dockerignore
 .gitignore
 
-config
 main.py
 
 config.yml.example
