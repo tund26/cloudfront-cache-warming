@@ -1,7 +1,8 @@
-import http.client
 import socket
+from http.client import HTTPSConnection
 
-class CustomHTTPSConnection(http.client.HTTPSConnection):
+
+class CustomHTTPSConnection(HTTPSConnection):
     def __init__(self, host, ip, port=443, **kwargs):
         self.ip = ip
         super().__init__(host, port, **kwargs)

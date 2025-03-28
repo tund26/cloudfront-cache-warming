@@ -6,7 +6,7 @@ from entity.https import CustomHTTPSConnection
 
 
 @shared_task(ignore_result=False)
-def send_request_with_paths(hostname, ip, paths):
+def send_request_with_paths(hostname, ip, paths):    
     results = []
     for path in paths:
         connection = CustomHTTPSConnection(hostname, ip)
@@ -17,9 +17,13 @@ def send_request_with_paths(hostname, ip, paths):
             print(f'requesting to: https://{hostname}{path} using ip {ip}')
             connection.request("GET", path, headers=headers)
             response = connection.getresponse()
-
-            results.append({path: response.status, 'x-cache': response.getheader('X-Cache'), 'x-amz-cf-pop': response.getheader('X-Amz-Cf-Pop')})
-            print('.', end='', flush=True)  # Progress indicator
+            
+            status = response.status
+            xpop = response.getheader('X-Amz-Cf-Pop')
+            xcache = response.getheader('X-Cache')
+            
+            results.append({path: status, 'x-cache': xcache, 'x-amz-cf-pop': xpop})
+            print('.', end='', flush=True)
         except socket.timeout:
             results.append({path: 'timeout'})
         except HTTPException as e:

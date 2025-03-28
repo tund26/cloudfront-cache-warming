@@ -9,6 +9,7 @@ import redis
 import sys
 from argparse import ArgumentParser
 from entity.dns import Dns
+from entity.https import CustomHTTPSConnection
 
 
 redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
@@ -59,9 +60,28 @@ def resolve(domain):
                             if not ips:
                                 raise Exception(f'Resolve failed when using the dns server.')
                             
+                            pops = []
                             for ip in ips:
-                                redis_client.sadd(f"{domain}:{region}:{country}", f"{ip}")
-                            
+                                connection = CustomHTTPSConnection(domain, ip)
+                                try:
+                                    connection.request("GET", '/', headers={"Host": domain})
+                                    response = connection.getresponse()
+                                    
+                                    pop = response.getheader('X-Amz-Cf-Pop')
+                                    if pop in pops:
+                                        raise Exception(f'same pop {pop}, not necessary')
+                                    
+                                    key = f"{domain}:{region}:{ip}"
+                                    if redis_client.exists(key) == 1:
+                                        continue
+                                    
+                                    pops.append(pop)
+                                    redis_client.hset(key, mapping={"pop": pop, "country": country, "city": edge_location, "resolved_by": city['ip']})
+                                except Exception as e:
+                                    print(e)
+                                    pass
+                                finally:
+                                    connection.close()
                             dns_servers_stable_list.append(city['ip'])
                             break
                         except Exception as e:

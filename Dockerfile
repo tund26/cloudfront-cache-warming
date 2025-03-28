@@ -17,4 +17,4 @@ RUN adduser -u 5678 --disabled-password --gecos "" app && chown -R app /app
 USER app
 
 EXPOSE 5000
-CMD ["python", "warmfront.py"]
+CMD ["python", "run.py"]
