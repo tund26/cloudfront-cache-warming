@@ -1,9 +1,10 @@
 
-import socket, redis
-from http.client import HTTPException
+import redis
+import socket
 from celery import shared_task
-from entity.https import CustomHTTPSConnection
+from http.client import HTTPException
 
+from entity.https import CustomHTTPSConnection
 
 redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
 
@@ -12,30 +13,31 @@ redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
 def send_request_with_paths(hostname, ip, paths):
     results = []
     for path in paths:
-        if redis_client.exists(f'error:{path}') == 1:
-            print(f'This path has previously failed: {path}')
-            continue
-        
         connection = CustomHTTPSConnection(hostname, ip)
         connection.timeout = 10
         headers = {"Host": hostname}
         
         try:
-            print(f'requesting to: https://{hostname}{path} using ip {ip}')
+            print(f'GET: https://{hostname}{path} using ip {ip}')
             connection.request("GET", path, headers=headers)
             response = connection.getresponse()
             
             status = response.status
-            xpop = response.getheader('X-Amz-Cf-Pop')
-            xcache = response.getheader('X-Cache')
+            x_pop = response.getheader('X-Amz-Cf-Pop')
+            x_cache = response.getheader('X-Cache').lower()
             
-            results.append({path: status, 'x-cache': xcache, 'x-amz-cf-pop': xpop})
+            results.append({path: status, 'x-cache': x_cache, 'x-amz-cf-pop': x_pop})
             print('.', end='', flush=True)
             
-            if 'error' in xcache.lower():
-                redis_client.hset(f'error:{path}', mapping={'status': status, 'pop': xpop})
-                redis_client.expire(f'error:{path}', 1800)
-                
+            if 'error' in x_cache:
+                redis_client.hset(f'error:{path}:{x_pop}', mapping={'status': status, 'state': x_cache})
+                redis_client.expire(f'error:{path}:{x_pop}', 1800)
+            elif 'hit' in x_cache or 'miss' in x_cache:  # bundle file with same name after build, cache for 1 hour
+                redis_client.hset(f'cache:{path}:{x_pop}', mapping={'status': status, 'state': x_cache})
+                redis_client.expire(f'cache:{path}:{x_pop}', 3600)
+            else:
+                print(f'other state: {x_cache}')
+                pass
         except socket.timeout:
             results.append({path: 'timeout'})
         except HTTPException as e:

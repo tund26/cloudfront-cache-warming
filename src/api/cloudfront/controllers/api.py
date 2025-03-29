@@ -34,6 +34,10 @@ class Cache(Resource):
                     continue
                 
                 for key, paths in ((key, paths) for key in keys for paths in batch(request.json['paths'], chunk_size)):
+                    valid_paths = filter_valid_paths(key, paths)
+                    if not valid_paths:
+                        continue
+
                     ip = ip_pattern.search(key)[0]
                     if not ip:
                         continue
@@ -46,10 +50,26 @@ class Cache(Resource):
             return jsonify(message=f"Internal server error"), 500
 
 
+def filter_valid_paths(key, paths) -> list:
+    data = []
+    for path in paths:
+        pop = redis_client.hget(key, 'pop')
+        if redis_client.exists(f'error:{path}:{pop}') == 1:
+            print(f'This path has previously failed: {path}')
+            continue
+
+        if redis_client.exists(f'cache:{path}:{pop}') == 1:
+            print(f'This path has previously cached: {path}')
+            continue
+
+        data.append(path)
+    return data
+
+
 def batch(iterable, n=1):
-    l = len(iterable)
-    for ndx in range(0, l, n):
-        yield iterable[ndx:min(ndx + n, l)]
+    _l = len(iterable)
+    for ndx in range(0, _l, n):
+        yield iterable[ndx:min(ndx + n, _l)]
 
 
 def on_raw_message(body):
