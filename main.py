@@ -89,7 +89,7 @@ def resolve(domain):
                             pass
             
             print(country, dns_servers_stable_list)
-            if (len(dns_servers_stable_list) > 0):
+            if len(dns_servers_stable_list) > 0:
                 results[country] = dns_servers_stable_list
             
     with open('config.yml', 'w') as cf:

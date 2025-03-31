@@ -1,5 +1,6 @@
 import dns.resolver
 
+
 class Dns:
     def __init__(self, timeout=10.0, lifetime=10.0):
         self.dns_cache = {}
