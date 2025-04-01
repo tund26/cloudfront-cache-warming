@@ -18,27 +18,22 @@ services:
       - 5000
     depends_on:
       - redis
-  worker-1:
+  worker:
     build: .
     networks:
       - app
     depends_on:
       - redis
-    command: "celery -A run.celery_app worker --loglevel INFO"
-  worker-2:
+    command: "celery -A run.celery_app worker --loglevel INFO -E"
+  flower:
     build: .
     networks:
       - app
     depends_on:
       - redis
-    command: "celery -A run.celery_app worker --loglevel INFO"
-  worker-3:
-    build: .
-    networks:
-      - app
-    depends_on:
-      - redis
-    command: "celery -A run.celery_app worker --loglevel INFO"
+    ports:
+      - 5555:5555
+    command: "celery -A run.celery_app --broker=redis://redis:6379/0 flower"
   redis:
     image: 'bitnami/redis:latest'
     environment:

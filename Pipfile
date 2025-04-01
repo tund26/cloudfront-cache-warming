@@ -11,6 +11,7 @@ redis = "*"
 flask = {extras = ["async"], version = "*"}
 celery = "*"
 flask-restx = "*"
+flower = "*"
 
 [dev-packages]
 
