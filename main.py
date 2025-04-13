@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import socket
 import yaml
 import json
@@ -12,7 +13,7 @@ from entity.dns import Dns
 from entity.https import CustomHTTPSConnection
 
 
-redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
+redis_client = redis.Redis(host=os.environ.get('REDIS_HOST'), port=6379, decode_responses=True)
 
 
 def filter_dict_list(dict_list, condition):

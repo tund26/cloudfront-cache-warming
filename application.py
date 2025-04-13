@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 
 from celery import Celery, Task
@@ -27,12 +28,12 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_mapping(
         CELERY=dict(
-            broker_url="redis://redis",
-            result_backend="redis://redis",
+            broker_url=f"redis://{os.environ.get('REDIS_HOST')}",
+            result_backend=f"redis://{os.environ.get('REDIS_HOST')}",
             task_ignore_result=True,
-            task_serializer = 'json',
-            result_serializer = 'json',
-            accept_content = ['json']
+            task_serializer='json',
+            result_serializer='json',
+            accept_content=['json']
         ),
     )
     

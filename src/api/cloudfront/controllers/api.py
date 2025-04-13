@@ -14,7 +14,7 @@ from extensions.log_extension import get_logger
 api = Namespace('cloudfront', description='Request Endpoints')
 logger = get_logger(__name__)
 
-redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
+redis_client = redis.Redis(host=os.environ.get('REDIS_HOST'), port=6379, decode_responses=True)
 
 
 @api.route('/cache')
