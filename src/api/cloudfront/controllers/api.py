@@ -1,7 +1,9 @@
+import os
 import yaml
 import redis
 import re
 from flask import request, jsonify
+from celery import chord, group
 
 from flask_restx import Namespace, Resource
 from flask import request
@@ -21,19 +23,21 @@ class Cache(Resource):
     def post(self):
         if not dict(request.json):
             return jsonify(message="Data is invalid"), 400
-        
+
+        payload = request.json
         chunk_size = 5
         try:
             with open("config/edge_locations.yaml") as f:
                 edge_locations = yaml.safe_load(f)['edge_locations']
                 
             ip_pattern = re.compile(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
+            warming_tasks = []
             for region in edge_locations:
-                keys = redis_client.keys(f"{request.json['domain']}:{region}:*")
+                keys = redis_client.keys(f"{payload['domain']}:{region}:*")
                 if not keys:
                     continue
                 
-                for key, paths in ((key, paths) for key in keys for paths in batch(request.json['paths'], chunk_size)):
+                for key, paths in ((key, paths) for key in keys for paths in batch(payload['paths'], chunk_size)):
                     valid_paths = filter_valid_paths(key, paths)
                     if not valid_paths:
                         continue
@@ -41,10 +45,13 @@ class Cache(Resource):
                     ip = ip_pattern.search(key)[0]
                     if not ip:
                         continue
-                    
-                    send_request_with_paths.apply_async(args=(request.json['domain'], ip, paths))
-                    
-            return jsonify(message="success")
+
+                    task = send_request_with_paths.s(payload['domain'], ip, paths)
+                    warming_tasks.append(task)
+
+            callbacks = group(notify.s(pipeline_url=payload['pipeline_url']), trigger.s(branch=payload['branch']))
+            chord(warming_tasks)(callbacks)
+            return jsonify({"status": "started"})
         except Exception as e:
             print(e)
             return jsonify(message=f"Internal server error"), 500

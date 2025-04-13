@@ -1,6 +1,7 @@
-
+import os
 import redis
 import socket
+import requests
 from celery import shared_task
 from http.client import HTTPException
 
@@ -50,3 +51,34 @@ def send_request_with_paths(hostname, ip, paths):
             connection.close()
             
     return results
+
+
+@shared_task(ignore_result=False)
+def notify(results, pipeline_url):
+    pipeline_urls = pipeline_url.split('/')
+    pipeline_id = pipeline_urls[len(pipeline_urls) - 1]
+    send_to_mattermost(f"@all\nAll cache warming tasks with pipeline [#{pipeline_id}]({pipeline_url}) completed")
+
+
+@shared_task(ignore_result=False)
+def trigger(results, branch):
+    try:
+        send_to_mattermost(f"@all\nTrigger deployment to the {branch} branch after the warming tasks completes")
+    except Exception as e:
+        print(f"Error triggering webhook: {e}")
+
+
+def send_to_mattermost(message):
+    payload = {
+        "channel_id": os.environ.get('NOTIFY_CHANNEL_ID'),
+        "message": message
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {os.environ.get('NOTIFY_API_TOKEN')}"
+    }
+    try:
+        response = requests.post(os.environ.get("NOTIFY_API_ENDPOINT"), json=payload, headers=headers)
+        print(response)
+    except Exception as e:
+        print(f"Error sending notify to mattermost: {e}")

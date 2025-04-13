@@ -13,7 +13,7 @@ services:
     networks:
       - app
     ports:
-      - 5000:5000
+      - "5001:5000"
     expose:
       - 5000
     depends_on:
@@ -25,6 +25,10 @@ services:
     depends_on:
       - redis
     command: "celery -A run.celery_app worker --loglevel INFO -E"
+    environment:
+      NOTIFY_CHANNEL_ID: ""
+      NOTIFY_API_TOKEN: ""
+      NOTIFY_API_ENDPOINT: ""
   flower:
     build: .
     networks:
@@ -32,7 +36,7 @@ services:
     depends_on:
       - redis
     ports:
-      - 5555:5555
+      - "5555:5555"
     command: "celery -A run.celery_app --broker=redis://redis:6379/0 flower"
   redis:
     image: 'bitnami/redis:latest'
@@ -45,4 +49,4 @@ services:
     expose:
       - 6379
     ports:
-      - 127.0.0.1:6379:6379
+      - "127.0.0.1:6379:6379"

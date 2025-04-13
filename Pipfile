@@ -12,6 +12,7 @@ flask = {extras = ["async"], version = "*"}
 celery = "*"
 flask-restx = "*"
 flower = "*"
+requests = "*"
 
 [dev-packages]
 
