@@ -72,7 +72,7 @@ def trigger(results, pipeline_url, project_id):
         if not data:
             raise Exception(f'Send trigger job failed with job_id = {job_id}')
         
-        send_to_mattermost(f"@all\nAll cache warming tasks with pipeline [#{pipeline_id}]({pipeline_url}) completed\nTriggerred the job [#{job_id}]({data['web_url']}): :rocket: - {data['status'].upper()}")
+        send_to_mattermost(f"All cache warming tasks with pipeline [#{pipeline_id}]({pipeline_url}) completed\nTriggerred the job [#{job_id}]({data['web_url']}): :rocket: - {data['status'].upper()}")
         return data
     except Exception as e:
         print(f"Error triggering webhook: {e}")
