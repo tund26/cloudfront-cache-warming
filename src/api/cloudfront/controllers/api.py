@@ -25,19 +25,22 @@ class Cache(Resource):
             return jsonify(message="Data is invalid"), 400
 
         payload = request.json
-        chunk_size = 5
-        try:
+        try:            
             with open("config/edge_locations.yaml") as f:
                 edge_locations = yaml.safe_load(f)['edge_locations']
                 
             ip_pattern = re.compile(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
+            chunk_size = os.environ.get('CHUNK_SIZE')
+            if not chunk_size:
+                raise Exception('CHUNK_SIZE is None')
+            
             warming_tasks = []
             for region in edge_locations:
                 keys = redis_client.keys(f"{payload['domain']}:{region}:*")
                 if not keys:
                     continue
                 
-                for key, paths in ((key, paths) for key in keys for paths in batch(payload['paths'], chunk_size)):
+                for key, paths in ((key, paths) for key in keys for paths in batch(payload['paths'], int(chunk_size))):
                     valid_paths = filter_valid_paths(key, paths)
                     if not valid_paths:
                         continue
@@ -49,8 +52,7 @@ class Cache(Resource):
                     task = send_request_with_paths.s(payload['domain'], ip, paths)
                     warming_tasks.append(task)
 
-            callbacks = group(notify.s(pipeline_url=payload['pipeline_url']), trigger.s(branch=payload['branch']))
-            chord(warming_tasks)(callbacks)
+            chord(warming_tasks)(trigger.s(pipeline_url=payload['pipeline_url'], project_id=payload['project_id']))
             return jsonify({"status": "started"})
         except Exception as e:
             print(e)
@@ -78,7 +80,3 @@ def batch(iterable, n=1):
     _l = len(iterable)
     for ndx in range(0, _l, n):
         yield iterable[ndx:min(ndx + n, _l)]
-
-
-def on_raw_message(body):
-    print(body)

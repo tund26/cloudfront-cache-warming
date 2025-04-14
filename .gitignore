@@ -7,3 +7,5 @@ __pycache__
 
 config.yml
 celerybeat-schedule
+
+docker-compose-run.yml

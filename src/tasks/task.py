@@ -2,12 +2,14 @@ import os
 import redis
 import socket
 import requests
+import json
 from celery import shared_task
 from http.client import HTTPException
 
 from entity.https import CustomHTTPSConnection
 
 redis_client = redis.Redis(host=os.environ.get('REDIS_HOST'), port=6379, decode_responses=True)
+api_url = os.environ.get('GITLAB_PROJECT_API_URL')
 
 
 @shared_task(ignore_result=False)
@@ -54,16 +56,24 @@ def send_request_with_paths(hostname, ip, paths):
 
 
 @shared_task(ignore_result=False)
-def notify(results, pipeline_url):
-    pipeline_urls = pipeline_url.split('/')
-    pipeline_id = pipeline_urls[len(pipeline_urls) - 1]
-    send_to_mattermost(f"@all\nAll cache warming tasks with pipeline [#{pipeline_id}]({pipeline_url}) completed")
-
-
-@shared_task(ignore_result=False)
-def trigger(results, branch):
+def trigger(results, pipeline_url, project_id):
     try:
-        send_to_mattermost(f"@all\nTrigger deployment to the {branch} branch after the warming tasks completes")
+        pipeline_id = get_pipeline_id_in_url(pipeline_url)
+        job_id = get_deploy_job_id(project_id, pipeline_id)
+        if not job_id:
+            raise Exception("Deploy job id not found")
+        
+        # Trigger deploy job on stage deploy_cache
+        headers = {
+            "PRIVATE-TOKEN": os.environ.get('GITLAB_PRIVATE_TOKEN')
+        }
+        response = requests.post(f"{api_url}/{project_id}/jobs/{job_id}/play", headers=headers)
+        data = json.loads(response.text)
+        if not data:
+            raise Exception(f'Send trigger job failed with job_id = {job_id}')
+        
+        send_to_mattermost(f"@all\nAll cache warming tasks with pipeline [#{pipeline_id}]({pipeline_url}) completed\nTriggerred the job [#{job_id}]({data['web_url']}): :rocket: - {data['status'].upper()}")
+        return data
     except Exception as e:
         print(f"Error triggering webhook: {e}")
 
@@ -79,6 +89,29 @@ def send_to_mattermost(message):
     }
     try:
         response = requests.post(os.environ.get("NOTIFY_API_ENDPOINT"), json=payload, headers=headers)
-        print(response)
+        return response.text
     except Exception as e:
         print(f"Error sending notify to mattermost: {e}")
+
+
+def get_pipeline_id_in_url(pipeline_url) -> str:
+    pipeline_lst = pipeline_url.split('/')
+    return pipeline_lst[len(pipeline_lst) - 1]
+
+
+def get_deploy_job_id(project_id, pipeline_id):
+    headers = {
+        "PRIVATE-TOKEN": os.environ.get('GITLAB_PRIVATE_TOKEN')
+    }
+    try:
+        jobs = requests.get(f"{api_url}/{project_id}/pipelines/{pipeline_id}/jobs", headers=headers)
+        data = json.loads(jobs.text)
+        id = None
+        for job in data:
+            if job['stage'] == 'deploy_cache' and job['status'] == 'manual':
+                id = job['id']
+                break
+        return id
+    except Exception as e:
+        print(e)
+        return None

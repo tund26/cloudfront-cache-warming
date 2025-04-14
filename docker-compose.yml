@@ -18,6 +18,9 @@ services:
       - 5000
     depends_on:
       - redis
+    environment:
+      REDIS_HOST: redis
+      CHUNK_SIZE: 5
   worker:
     build: .
     networks:
@@ -26,9 +29,11 @@ services:
       - redis
     command: "celery -A run.celery_app worker --loglevel INFO -E"
     environment:
-      NOTIFY_CHANNEL_ID: ""
-      NOTIFY_API_TOKEN: ""
-      NOTIFY_API_ENDPOINT: ""
+      NOTIFY_CHANNEL_ID: "***"
+      NOTIFY_API_TOKEN: "***"
+      NOTIFY_API_ENDPOINT: "***"
+      GITLAB_PRIVATE_TOKEN: "***"
+      GITLAB_PROJECT_API_URL: "https://gitlab.com/api/v4/projects"
   flower:
     build: .
     networks:
@@ -38,6 +43,8 @@ services:
     ports:
       - "5555:5555"
     command: "celery -A run.celery_app --broker=redis://redis:6379/0 flower"
+    environment:
+      REDIS_HOST: redis
   redis:
     image: 'bitnami/redis:latest'
     environment:
